@@ -18,6 +18,52 @@ app.get("/",(req,res) => {
     res.send("Server is running..🚀");//response to browser or the client
 });
 
+//Dummy users data as temporary
+let users = [
+    {id:1,name:"madhu",email:"madhu@mail.com"},
+    {id:2,name:"john",email:"john@gmail.com"}
+];
+
+//To get all users
+app.get("/users",(req,res)=>{
+    res.status(200).json(users);
+});
+
+//POST new user
+app.post("/users",(req,res)=>{
+    const newUser={
+        id:users.length+1,
+        ...req.body
+    };
+
+    users.push(newUser);
+    res.status(201).json(newUser);
+});
+
+//UPDATE new User
+app.put("/users/:id",(req,res)=>{
+    const id = parseInt(req.params.id);
+
+    const userIndex = users.findIndex(user => user.id ===id);
+
+    if(userIndex===-1){
+        return res.status(404).json({message:"user not found"})
+    }
+
+    users[userIndex]={
+        ...users[userIndex], //old data
+        ...req.body // updated data of specific field mentioned
+    };
+
+    res.status(200).json(users[userIndex]);
+});
+
+//DELETE user
+app.delete("/users/:id",(req,res)=>{
+    const id = parseInt(req.params.id);
+    users= users.filter(user =>user.id !=id);
+    res.status(200).json({message:"User deleted"});
+});
 
 // listen for incoming request on this port
 app.listen(PORT,() =>{
