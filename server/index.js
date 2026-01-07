@@ -5,6 +5,8 @@ const dotenv = require("dotenv");
 //allows a server to work on multiple origins
 const cors =require("cors");
 
+const pool=require("./DB/db");
+
 
 dotenv.config();//load environment variables from.env file
 
@@ -24,16 +26,27 @@ let users = [
     {id:2,name:"john",email:"john@gmail.com"}
 ];
 
-//To get all users
-app.get("/users",(req,res)=>{
-    res.status(200).json(users);
+//To get all users through postman
+// app.get("/users",(req,res)=>{
+//     res.status(200).json(users);
+// });
+
+//To get data through BD
+app.get("/users", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT * FROM users");
+    res.status(200).json(rows);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
+
 
 //POST new user
 app.post("/users",(req,res)=>{
     const newUser={
         id:users.length+1,
-        ...req.body
+        ...req.body //update the of the specific field
     };
 
     users.push(newUser);
