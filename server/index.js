@@ -5,8 +5,7 @@ const dotenv = require("dotenv");
 //allows a server to work on multiple origins
 const cors =require("cors");
 
-const pool=require("./DB/db");
-
+const pool=require("./DB/db");//gateway to intract with DB
 
 dotenv.config();//load environment variables from.env file
 
@@ -21,10 +20,10 @@ app.get("/",(req,res) => {
 });
 
 //Dummy users data as temporary
-let users = [
-    {id:1,name:"madhu",email:"madhu@mail.com"},
-    {id:2,name:"john",email:"john@gmail.com"}
-];
+// let users = [
+//     {id:1,name:"madhu",email:"madhu@mail.com"},
+//     {id:2,name:"john",email:"john@gmail.com"}
+// ];
 
 //To get all users through postman
 // app.get("/users",(req,res)=>{
@@ -32,9 +31,9 @@ let users = [
 // });
 
 //To get data through BD
-app.get("/users", async (req, res) => {
+app.get("/users", async (req, res) => { //asyn blocks the function to run DB query
   try {
-    const [rows] = await pool.query("SELECT * FROM users");
+    const [rows] = await pool.query("SELECT * FROM users"); //await tells the js until DB finishes then go on...
     res.status(200).json(rows);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -43,14 +42,39 @@ app.get("/users", async (req, res) => {
 
 
 //POST new user
-app.post("/users",(req,res)=>{
-    const newUser={
-        id:users.length+1,
-        ...req.body //update the of the specific field
-    };
+// app.post("/users",(req,res)=>{
+//     const newUser={
+//         id:users.length+1,
+//         ...req.body //update the of the specific field
+//     };
 
-    users.push(newUser);
-    res.status(201).json(newUser);
+//     users.push(newUser);
+//     res.status(201).json(newUser);
+// });
+
+//post new user through DB
+app.post("/users/bulk",async(req,res)=>{
+    try{
+        const users =req.body; // it expects for an array
+        // const{name,email}=req.body; to add single user logic
+        
+
+         if(!Array.isArray(users) || users.length === 0){
+            return res.status(400).json({message:"users array is required"});
+         }
+
+        const values = users.map(user => [user.name,user.mail]);
+        const query ="INSERT INTO users(name,email) VALUES ?";
+        const[result] = await pool.query(query,[values]);  //await always used inside asyn function
+
+        res.status(201).json({
+            message:"user created successfully",
+            insertedCount:result.affectedRows
+        });
+    }
+    catch(error){
+        res.status(500).json({message:error.message});
+    }
 });
 
 //UPDATE new User
