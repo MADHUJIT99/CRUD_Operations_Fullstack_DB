@@ -78,28 +78,81 @@ app.post("/users/bulk",async(req,res)=>{
 });
 
 //UPDATE new User
-app.put("/users/:id",(req,res)=>{
-    const id = parseInt(req.params.id);
+// app.put("/users/:id",(req,res)=>{
+//     const id = parseInt(req.params.id);
 
-    const userIndex = users.findIndex(user => user.id ===id);
+//     const userIndex = users.findIndex(user => user.id ===id);
 
-    if(userIndex===-1){
-        return res.status(404).json({message:"user not found"})
+//     if(userIndex===-1){
+//         return res.status(404).json({message:"user not found"})
+//     }
+
+//     users[userIndex]={
+//         ...users[userIndex], //old data
+//         ...req.body // updated data of specific field mentioned
+//     };
+
+//     res.status(200).json(users[userIndex]);
+// });
+
+// UPDATE Data in the DB
+
+app.put("/users/:id",async(req,res)=>{
+    try{
+
+        // let updatedcount =0;
+        const{id} = req.params;
+        const{name,email} = req.body;
+        // for(const user of users){} for updating multiple data
+        const query = "UPDATE users SET name=?,email=? WHERE id=?";
+           
+        
+        const [result] =await pool.query(query,[name,email,id]); //user.name user.email,user.id for multiple
+            // updatedcount+=result.affectedRows;
+        if(result.affectedRows===0){
+            return res.status(404).json({message:"user not found"});
+        }
+
+
+
+        res.status(200).json({
+            message:"user updated successfully"
+        });
     }
-
-    users[userIndex]={
-        ...users[userIndex], //old data
-        ...req.body // updated data of specific field mentioned
-    };
-
-    res.status(200).json(users[userIndex]);
+    catch(error){
+        res.status(500).json({message:"error.message"});
+    }
 });
 
+
+
 //DELETE user
-app.delete("/users/:id",(req,res)=>{
-    const id = parseInt(req.params.id);
-    users= users.filter(user =>user.id !=id);
-    res.status(200).json({message:"User deleted"});
+// app.delete("/users/:id",(req,res)=>{
+//     const id = parseInt(req.params.id);
+//     users= users.filter(user =>user.id !=id);
+//     res.status(200).json({message:"User deleted"});
+// });
+
+//DELETE user from DB
+
+app.delete("/users/:id",async(req,res)=>{
+    try{
+        const { id } =req.params;
+
+        const query ="DELETE FROM users WHERE id = ?";
+        const [result] = await pool.query(query,[id]);
+
+        if(result.affectedRows===0){
+            return res.status(404).json({message:"User not found"});
+        }
+
+                res.status(200).json({message:"User deleted succefully"});
+
+
+    }
+    catch(error){
+        res.status(500).json({message:error.message});
+    }
 });
 
 // listen for incoming request on this port
