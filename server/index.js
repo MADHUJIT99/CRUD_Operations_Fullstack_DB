@@ -56,14 +56,14 @@ app.get("/users", async (req, res) => { //asyn blocks the function to run DB que
 app.post("/users/bulk",async(req,res)=>{
     try{
         const users =req.body; // it expects for an array
-        // const{name,email}=req.body; to add single user logic
+        //  const{name,email}=req.body; to add single user logic
         
 
          if(!Array.isArray(users) || users.length === 0){
             return res.status(400).json({message:"users array is required"});
          }
 
-        const values = users.map(user => [user.name,user.mail]);
+        const values = users.map(user => [user.name,user.email]);
         const query ="INSERT INTO users(name,email) VALUES ?";
         const[result] = await pool.query(query,[values]);  //await always used inside asyn function
 
