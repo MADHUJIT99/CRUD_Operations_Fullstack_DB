@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
+import "./App.css";
 
 function App() {
   const [users, setUsers] = useState([]);
-  const [bulkUsers, setBulkUsers] = useState([
-    { name: "", email: "" }
-  ]);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
 
-  // GET users
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -17,88 +16,63 @@ function App() {
     setUsers(data);
   };
 
-  // Add new input row
-  const addRow = () => {
-    setBulkUsers([...bulkUsers, { name: "", email: "" }]);
-  };
-
-  // Handle input change
-  const handleChange = (index, field, value) => {
-    const updatedUsers = [...bulkUsers];
-    updatedUsers[index][field] = value;
-    setBulkUsers(updatedUsers);
-  };
-
-  // BULK POST
-  const submitBulkUsers = async () => {
-    // remove empty rows
-    const validUsers = bulkUsers.filter(
-      u => u.name.trim() && u.email.trim()
-    );
-
-    if (validUsers.length === 0) {
-      alert("Enter at least one user");
+  const addUser = async () => {
+    if (!name || !email) {
+      alert("Name and Email required");
       return;
     }
 
-    const res = await fetch("http://localhost:3000/users/bulk", {
+    const res = await fetch("http://localhost:3000/users", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(validUsers)
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email })
     });
 
-    const data = await res.json();
+    const newUser = await res.json();
 
-    alert(`${data.insertedCount} users added`);
-
-    // refresh list
-    fetchUsers();
-
-    // reset form
-    setBulkUsers([{ name: "", email: "" }]);
+    setUsers([...users, newUser]);
+    setName("");
+    setEmail("");
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Bulk Add Users</h2>
+    <div className="container">
+      <h2>Add User</h2>
 
-      {bulkUsers.map((user, index) => (
-        <div key={index}>
-          <input
-            placeholder="Name"
-            value={user.name}
-            onChange={e =>
-              handleChange(index, "name", e.target.value)
-            }
-          />
+      <div className="form-group">
+        <input
+          placeholder="Name"
+          value={name}
+          onChange={e => setName(e.target.value)}
+        />
 
-          <input
-            placeholder="Email"
-            value={user.email}
-            onChange={e =>
-              handleChange(index, "email", e.target.value)
-            }
-          />
-        </div>
-      ))}
+        <input
+          placeholder="Email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+        />
+      </div>
 
-      <button onClick={addRow}>➕ Add Row</button>
-      <br /><br />
+      <button className="primary" onClick={addUser}>
+        Add User
+      </button>
 
-      <button onClick={submitBulkUsers}>Submit Bulk Users</button>
+      <div className="user-list">
+        <h2>User List</h2>
 
-      <hr />
-
-      <h2>User List</h2>
-      <ul>
         {users.map(user => (
-          <li key={user.id}>
-            {user.name} - {user.email}
-          </li>
+          <div className="user-item" key={user.id}>
+            <div>
+              <strong>{user.name}</strong>
+              <div style={{ fontSize: "14px", color: "#666" }}>
+                {user.email}
+              </div>
+            </div>
+
+            <button className="danger">DELETE</button>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
